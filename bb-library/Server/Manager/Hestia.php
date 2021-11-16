@@ -42,6 +42,57 @@ class Server_Manager_Hestia extends Server_Manager
         return 'http://www.google.com?q=cpanel';
     }
 
+
+private function _getPackageName(Server_Package $package)
+    {
+        $name = $package->getName();
+        
+        return $name;
+    }
+private function _makeRequest($params)
+    {
+
+$host = 'http';
+		if ($this->_config['secure']) {
+			$host .= 's';
+		}
+		$host .= '://' . $this->_config['host'] . ':'.$this->_config['port'].'/api/';
+
+    	
+    	
+// Server credentials
+
+
+$params['user'] = $this->_config['username'];
+$params['password'] = $this->_config['password'];
+   	
+    	
+// Send POST query via cURL
+$postdata = http_build_query($params);
+$curl = curl_init();
+$timeout = 5;
+
+curl_setopt($curl, CURLOPT_URL, $host);
+curl_setopt($curl, CURLOPT_RETURNTRANSFER,true);
+curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+curl_setopt($curl, CURLOPT_POST, true);
+curl_setopt($curl, CURLOPT_POSTFIELDS, $postdata);
+curl_setopt ($curl, CURLOPT_CONNECTTIMEOUT, $timeout);
+
+$result = curl_exec($curl);
+
+curl_close($curl);
+
+		if(strpos($result, 'Error')!== false){
+throw new Server_Exception('Connection to server failed  '.$result);
+    	}
+
+		
+			return $result;
+    }
+
+
     /**
      * Returns link to reseller account management
      * @return string 
@@ -77,55 +128,8 @@ class Server_Manager_Hestia extends Server_Manager
         return $new;
     }
 
-   private function _makeRequest($params)
-    {
-
-		$host = 'http';
-		if ($this->_config['secure']) {
-			$host .= 's';
-		}
-		$host .= '://' . $this->_config['host'] . ':'.$this->_config['port'].'/api/';
-
-    	
-    	
-		// Server credentials
-
-
-		$params['user'] = $this->_config['username'];
-		$params['password'] = $this->_config['password'];
-   	
-    	
-		// Send POST query via cURL
-		$postdata = http_build_query($params);
-		$curl = curl_init();
-		$timeout = 5;
-
-		curl_setopt($curl, CURLOPT_URL, $host);
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER,true);
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
-		curl_setopt($curl, CURLOPT_POST, true);
-		curl_setopt($curl, CURLOPT_POSTFIELDS, $postdata);
-		//curl_setopt ($curl, CURLOPT_CONNECTTIMEOUT, $timeout);
-
-		$result = curl_exec($curl);
-
-		curl_close($curl);
-
-		
-    	}
-
-		
-	return $result;
-    }
-	
-private function _getPackageName(Server_Package $package)
-    {
-        $name = $package->getName();
-        
-        return $name;
-    }
-
+   
+  
 
 	
 	
@@ -135,8 +139,7 @@ private function _getPackageName(Server_Package $package)
      * @param Server_Account $a 
      */
 	public function createAccount(Server_Account $a)
-    
- {
+    {
 
                   $p = $a->getPackage();
            $packname = $this->_getPackageName($p);
@@ -144,42 +147,39 @@ private function _getPackageName(Server_Package $package)
 		
 		$client = $a->getClient();
         // Server credentials
-	$vst_command = 'v-add-user';
-	$vst_returncode = 'yes';
-	$parts = explode(" ", $client->getFullName());
-	$lastname = array_pop($parts);
-	$firstname = implode(" ", $parts);
+$vst_command = 'v-add-user';
+$vst_returncode = 'yes';
+$parts = explode(" ", $client->getFullName());
+$lastname = array_pop($parts);
+$firstname = implode(" ", $parts);
 
 
 
-	// Prepare POST query
-	$postvars = array(
+// Prepare POST query
+$postvars = array(
     
-    	'returncode' => $vst_returncode,
-    	'cmd' => $vst_command,
-    	'arg1' => $a->getUsername(),
-    	'arg2' => $a->getPassword(),
-    	'arg3' => $client->getEmail(),
-    	'arg4' => $packname,
-    	'arg5' => $firstname,
-    	'arg6' => $lastname							
+    'returncode' => $vst_returncode,
+    'cmd' => $vst_command,
+    'arg1' => $a->getUsername(),
+    'arg2' => $a->getPassword(),
+    'arg3' => $client->getEmail(),
+    'arg4' => $packname,
+    'arg5' => $firstname,
+    'arg6' => $lastname							
 
-	);    
-	// Make request and create user 
-	$result = $this->_makeRequest($postvars);
+);    
+// Make request and create user 
+$result = $this->_makeRequest($postvars);
 
 
 
         if($a->getReseller()) {
             $this->getLog()->info('Creating reseller hosting account');
-        }
-	else {
+        } else {
             $this->getLog()->info('Creating shared hosting account');
         }
-		
-    }
+	}
 
-    
     /**
      * Suspend account on server
      * @param Server_Account $a 
@@ -300,4 +300,4 @@ private function _getPackageName(Server_Package $package)
             $this->getLog()->info('Changing shared hosting account ip');
         }
     }
-}  
+}
