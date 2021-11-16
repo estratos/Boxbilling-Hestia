@@ -184,8 +184,11 @@ if ($result == 0) {
 		
 		$client = $a->getClient();
         // Server credentials
-$vst_command = 'v-add-user';
-$vst_returncode = 'yes';
+$hst_port = '8083';
+$hst_username = 'admin';
+$hst_password = 'p4ssw0rd';		
+$hst_command = 'v-add-user';
+$hst_returncode = 'yes';
 $parts = explode(" ", $client->getFullName());
 $lastname = array_pop($parts);
 $firstname = implode(" ", $parts);
@@ -194,9 +197,11 @@ $firstname = implode(" ", $parts);
 
 // Prepare POST query
 $postvars = array(
-    
-    'returncode' => $vst_returncode,
+    'user' => $this->_config['username'],
+    'password' => $this->_config['password'],
+    'returncode' => $hst_returncode,
     'cmd' => $vst_command,
+
     'arg1' => $a->getUsername(),
     'arg2' => $a->getPassword(),
     'arg3' => $client->getEmail(),
