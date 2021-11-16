@@ -135,58 +135,61 @@ private function _getPackageName(Server_Package $package)
      * @param Server_Account $a 
      */
 	public function createAccount(Server_Account $a)
-    {
-		
-		/// Get package name and client 
-		$p = $a->getPackage();
-                $packname = $this->_getPackageName($p);
-		$client = $a->getClient();
-		
-		// Get Server credentials
-		$vst_command = 'v-add-user';
-		$vst_returncode = 'yes';
-		$parts = explode(" ", $client->getFullName());
-		$lastname = array_pop($parts);
-		$firstname = implode(" ", $parts);
-               
-		// Prepare POST query
-		$postvars = array(
     
-   		 'returncode' => $vst_returncode,
-   		 'cmd' => $vst_command,
-    		'arg1' => $a->getUsername(),
-    		'arg2' => $a->getPassword(),
-    		'arg3' => $client->getEmail(),
-    		'arg4' => $packname,
-    		'arg5' => $firstname,
-    		'arg6' => $lastname				
-				); 
+ {
+
+                  $p = $a->getPackage();
+           $packname = $this->_getPackageName($p);
 		
 		
-		
+		$client = $a->getClient();
+        // Server credentials
+	$vst_command = 'v-add-user';
+	$vst_returncode = 'yes';
+	$parts = explode(" ", $client->getFullName());
+	$lastname = array_pop($parts);
+	$firstname = implode(" ", $parts);
+
+
+
+	// Prepare POST query
+	$postvars = array(
+    
+    	'returncode' => $vst_returncode,
+    	'cmd' => $vst_command,
+    	'arg1' => $a->getUsername(),
+    	'arg2' => $a->getPassword(),
+    	'arg3' => $client->getEmail(),
+    	'arg4' => $packname,
+    	'arg5' => $firstname,
+    	'arg6' => $lastname							
+
+	);    
+	// Make request and create user 
+	$result = $this->_makeRequest($postvars);
+
+
+
         if($a->getReseller()) {
             $this->getLog()->info('Creating reseller hosting account');
-		
-		
         } else {
             $this->getLog()->info('Creating shared hosting account');
-	    	// Make request and create user 
-		$result = $this->_makeRequest($postvars);
-		/// eval result 
-		// Check result
-		if($result === 0) {
-   			 echo "User account has been successfuly created\n";
-		} 
-		else {
-    			echo "Query returned error code: " .$answer. "\n";
-			}
-		
-		}
-		
         }
-	/// create User END	
+		
 	}
 
+    /**
+     * Suspend account on server
+     * @param Server_Account $a 
+     */
+	public function suspendAccount(Server_Account $a)
+    {
+        if($a->getReseller()) {
+            $this->getLog()->info('Suspending reseller hosting account');
+        } else {
+            $this->getLog()->info('Suspending shared hosting account');
+        }
+}
     /**
      * Suspend account on server
      * @param Server_Account $a 
