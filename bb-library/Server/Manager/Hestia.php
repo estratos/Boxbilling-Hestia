@@ -110,7 +110,44 @@ throw new Server_Exception('Connection to server failed  '.$result);
      */
     public function testConnection()
     {
-        return TRUE;
+      
+
+    
+           
+        // Server credentials
+$vst_command = 'v-check-user-password';
+$vst_returncode = 'yes';
+
+
+// Prepare POST query
+$postvars = array(
+    
+    'returncode' => $vst_returncode,
+    'cmd' => $vst_command,
+    'arg1' => $this->_config['username'],
+    'arg2' => $this->_config['password'],
+
+);
+
+    
+// Make request and check sys info
+$result = $this->_makeRequest($postvars);
+
+if(strpos($result, 'Error')!== false){
+throw new Server_Exception('Connection to server failed  '.$result);
+    	}
+else {
+
+if ($result == 0) {
+    		return true;
+    	} else {
+    		throw new Server_Exception('Connection to server failed '.$result);
+    	}
+
+}
+		return true;
+
+
     }
 
     /**
