@@ -172,24 +172,14 @@ private function _getPackageName(Server_Package $package)
 
         if($a->getReseller()) {
             $this->getLog()->info('Creating reseller hosting account');
-        } else {
+        }
+	else {
             $this->getLog()->info('Creating shared hosting account');
         }
 		
-	}
+    }
 
-    /**
-     * Suspend account on server
-     * @param Server_Account $a 
-     */
-	public function suspendAccount(Server_Account $a)
-    {
-        if($a->getReseller()) {
-            $this->getLog()->info('Suspending reseller hosting account');
-        } else {
-            $this->getLog()->info('Suspending shared hosting account');
-        }
-}
+    
     /**
      * Suspend account on server
      * @param Server_Account $a 
