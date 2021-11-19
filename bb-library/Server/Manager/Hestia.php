@@ -141,7 +141,7 @@ class Server_Manager_Hestia extends Server_Manager
         return $name;
     }
 
-private function _getPackageName(Server_Package $package)
+private function _getPackageName2(Server_Package $package)
     {
         $name = $package->getName();
         
@@ -282,7 +282,7 @@ if ($result == 0) {
 		//// check if package exists
 
         if (!$this->_packageExists($packname)) {
-            $this->_createPackage($packname);
+            //$this->_createPackage($packname);
         }
 		
 		$client = $a->getClient();
@@ -306,17 +306,17 @@ $postvars = array(
     'arg2' => $a->getPassword(),
     'arg3' => $client->getEmail(),
     'arg4' => $packname,
-    'arg5' => $firstname,
-    'arg6' => $lastname							
+    'arg5' => $firstname + '' + $lastname,
+   						
 
 );    
 // Make request and create user 
 $result = $this->_makeRequest($postvars);
-if($result == 0)
+if($result == 0)   /// no errors   4 user is already taken
 { 
 return true;
 }
-else {
+else if($result == 4) {
 throw new Server_Exception('Server Manager Vesta CP Error: User name exists on server, please choose another one '.$result);
 return false;
 }
@@ -338,6 +338,28 @@ return false;
         } else {
             $this->getLog()->info('Suspending shared hosting account');
         }
+      // Server cli commands
+      $hst_command = 'v-suspend-user';
+      $hst_returncode = 'yes';
+      $hst_format = 'json';
+      ///// create params
+      $postvars = array(
+  
+          'returncode' => $hst_returncode,
+          'cmd' => $hst_command,
+          'user' => $this->_config['username'],
+          'password' => $this->_config['password'],
+          'arg1' => 'yes'
+                                  
+      
+      ); 
+
+      $json = $this->_makerequest($postvars);
+      
+      $data = json_decode($json, true);
+      //$packagekeys = array_keys($data);
+        
+
 	}
 
     /**
