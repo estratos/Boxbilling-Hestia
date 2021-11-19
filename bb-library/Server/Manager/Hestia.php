@@ -41,7 +41,105 @@ class Server_Manager_Hestia extends Server_Manager
     {
         return 'http://www.google.com?q=cpanel';
     }
+   
 
+
+
+
+
+
+    /**
+     * Check if Package exists
+     * @param Server_Package $package
+     * @return bool
+     */
+    private function _checkPackageExists(Server_Package $package, $create = false)
+    {
+        $name = $this->_getPackageName($package);
+        // Server cli commands
+        $hst_command = 'v-list-user-packages';
+        $hst_returncode = 'yes';
+        $hst_format = 'json';
+        ///// create params
+        $postvars = array(
+    
+            'returncode' => $hst_returncode,
+            'cmd' => $hst_command,
+            'user' => $this->_config['username'],
+            'password' => $this->_config['password'],
+            'arg1' => $hst_format
+            						
+        
+        ); 
+
+        $json = $this->_makerequest($postvars);
+        
+        $data = json_decode($json, true);
+        $packagekeys = array_keys($data);
+
+        $exists = false;
+
+        //// find package name in array
+        foreach ($packagekeys as $p) {
+            
+            if ( $p == $name) {
+                $exists = true;
+                break;
+            }
+        }
+
+        if(!$create) {
+            return $exists;
+        }
+
+        if (!$exists) {
+        	//$var_hash['name']           = $name;
+			//$var_hash['webtemplate']			= $package->getQuota();
+            //$var_hash['backendtemplate']		= $package->getBandwidth();
+			//$var_hash['proxytemplate']			= $package->getMaxSubdomains();
+			//$var_hash['dnstemplate']		= $package->getMaxParkedDomains();
+			//$var_hash['webdomains']		= $package->getMaxDomains();
+			//$var_hash['webaliases']			= $package->getMaxFtp();
+			//$var_hash['dnsdomains']			= $package->getMaxSql();
+			//$var_hash['dnsrecords']			= $package->getMaxPop();
+            
+			//$var_hash['maildomains']			= $package->getCustomValue('cgi');
+			//$var_hash['mailaccounts']		    = $package->getCustomValue('frontpage');
+            //$var_hash['diskquota']			= $package->getCustomValue('cpmod');
+			//$var_hash['bandwidth']			= $package->getCustomValue('maxlst');
+            //$var_hash['backup']				= $package->getCustomValue('maxftp');
+            //$var_hash['time']		            = $package->getCustomValue('maxsql');
+            //$var_hash['date']				    = $package->getCustomValue('maxpop');
+            //$var_hash['shell']		        = $package->getCustomValue('hasshell');
+
+            $postvars = array(
+    
+                'returncode' => $hst_returncode,
+                'cmd' => $hst_command,
+                'user' => $this->_config['username'],
+                'password' => $this->_config['password'],
+                'arg1' => 'default.pkg',
+                'arg2' => $name                       
+            
+            ); 
+
+            $json = $this->_makerequest($postvars);   // add package to hestia server
+            $data = json_decode($json, true);         // check response
+            
+        }
+
+        return $exists;
+    }
+
+    private function _getPackageName(Server_Package $package)
+    {
+        $name = $package->getName();
+        if($this->_config['username'] != 'root') {
+            $name = $this->_config['username'].'_'.$name;
+        }
+        
+        return $name;
+    }
 
 private function _getPackageName(Server_Package $package)
     {
@@ -150,6 +248,7 @@ if ($result == 0) {
 
     }
 
+
     /**
      * MEthods retrieves information from server, assignes new values to
      * cloned Server_Account object and returns it.
@@ -180,15 +279,16 @@ if ($result == 0) {
 
                   $p = $a->getPackage();
            $packname = $this->_getPackageName($p);
-		
+		//// check if package exists
+
+        if (!$this->_packageExists($packname)) {
+            $this->_createPackage($packname);
+        }
 		
 		$client = $a->getClient();
         // Server credentials
-$hst_port = '8083';
-$hst_username = 'admin';
-$hst_password = 'p4ssw0rd';		
-$hst_command = 'v-add-user';
-$hst_returncode = 'yes';
+$vst_command = 'v-add-user';
+$vst_returncode = 'yes';
 $parts = explode(" ", $client->getFullName());
 $lastname = array_pop($parts);
 $firstname = implode(" ", $parts);
@@ -197,11 +297,11 @@ $firstname = implode(" ", $parts);
 
 // Prepare POST query
 $postvars = array(
+    
+    'returncode' => $vst_returncode,
+    'cmd' => $vst_command,
     'user' => $this->_config['username'],
     'password' => $this->_config['password'],
-    'returncode' => $hst_returncode,
-    'cmd' => $vst_command,
-
     'arg1' => $a->getUsername(),
     'arg2' => $a->getPassword(),
     'arg3' => $client->getEmail(),
@@ -212,9 +312,14 @@ $postvars = array(
 );    
 // Make request and create user 
 $result = $this->_makeRequest($postvars);
-
-
-
+if($result == 0)
+{ 
+return true;
+}
+else {
+throw new Server_Exception('Server Manager Vesta CP Error: User name exists on server, please choose another one '.$result);
+return false;
+}
         if($a->getReseller()) {
             $this->getLog()->info('Creating reseller hosting account');
         } else {
