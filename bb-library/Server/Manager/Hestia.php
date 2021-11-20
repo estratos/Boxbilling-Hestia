@@ -379,10 +379,12 @@ if ($result == 0) {
       ); 
 
       $json = $this->_makerequest($postvars);
-      
-      //$data = json_decode($json, true);
-      //$packagekeys = array_keys($data);
-        
+            
+
+      if($json != '0'){
+        throw new Server_Exception('Server Manager Hestia CP Error: suspend account failure '.$json);
+        return false;
+        }
 
 	}
 
@@ -455,7 +457,11 @@ if ($result == 0) {
       ); 
 
       $json = $this->_makerequest($postvars);
-      
+
+      if($json != '0'){
+        throw new Server_Exception('Server Manager Hestia CP Error: unsuspend account failure '.$json);
+        return false;
+        }
 
       return true;
 	}
@@ -471,6 +477,30 @@ if ($result == 0) {
         } else {
             $this->getLog()->info('Canceling shared hosting account');
         }
+    // Server cli commands
+    $hst_command = 'v-suspend-user';    /// at this time for security reasons delete accounts from server are disabled
+    $hst_returncode = 'yes';
+    $hst_format = 'json';
+    ///// create params
+    $postvars = array(
+
+        'returncode' => $hst_returncode,
+        'cmd' => $hst_command,
+        'user' => $this->_config['username'],
+        'password' => $this->_config['password'],
+        'arg1' => $a->getUsername(),
+        'arg2' => 'yes'
+                                
+    
+    ); 
+
+    $json = $this->_makerequest($postvars);
+
+        if($json != '0'){
+            throw new Server_Exception('Server Manager Hestia CP Error: delete account failure '.$json);
+            return false;
+            }
+            return true;
 	}
 
     /**
