@@ -437,6 +437,27 @@ if ($result == 0) {
         } else {
             $this->getLog()->info('Unsuspending shared hosting account');
         }
+        // Server cli commands
+      $hst_command = 'v-unsuspend-user';
+      $hst_returncode = 'yes';
+      $hst_format = 'json';
+      ///// create params
+      $postvars = array(
+  
+          'returncode' => $hst_returncode,
+          'cmd' => $hst_command,
+          'user' => $this->_config['username'],
+          'password' => $this->_config['password'],
+          'arg1' => $a->getUsername(),
+          'arg2' => 'yes'
+                                  
+      
+      ); 
+
+      $json = $this->_makerequest($postvars);
+      
+
+      return true;
 	}
 
     /**
