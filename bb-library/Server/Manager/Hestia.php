@@ -39,7 +39,16 @@ class Server_Manager_Hestia extends Server_Manager
      */
     public function getLoginUrl()
     {
-        return 'http://www.google.com?q=cpanel';
+
+     
+        $host = 'http';
+        if ($this->_config['secure']) {
+        $host .= 's';
+        }
+            $host .= '://' . $this->_config['host'] . ':'.$this->_config['port'];
+
+
+        return $host;
     }
    
 
@@ -131,7 +140,7 @@ class Server_Manager_Hestia extends Server_Manager
         return $exists;
     }
 
-    private function _getPackageName(Server_Package $package)
+    private function _getPackageNameaddPrefix(Server_Package $package)
     {
         $name = $package->getName();
         if($this->_config['username'] != 'root') {
@@ -141,7 +150,7 @@ class Server_Manager_Hestia extends Server_Manager
         return $name;
     }
 
-private function _getPackageName2(Server_Package $package)
+private function _getPackageName(Server_Package $package)
     {
         $name = $package->getName();
         
@@ -280,23 +289,21 @@ if ($result == 0) {
                   $p = $a->getPackage();
            $packname = $this->_getPackageName($p);
 		//// check if package exists
-
-        if (!$this->_packageExists($packname)) {
+        
+        //if (!$this->_checkPackageExists($packname, false)) {
             //$this->_createPackage($packname);
-        }
+       // }
 		
 		$client = $a->getClient();
         // Server credentials
-$vst_command = 'v-add-user';
-$vst_returncode = 'yes';
-$parts = explode(" ", $client->getFullName());
-$lastname = array_pop($parts);
-$firstname = implode(" ", $parts);
+        $vst_command = 'v-add-user';
+        $vst_returncode = 'yes';
+        
+        $fullname = $client->getFullName();
 
 
-
-// Prepare POST query
-$postvars = array(
+    // Prepare POST query
+    $postvars = array(
     
     'returncode' => $vst_returncode,
     'cmd' => $vst_command,
@@ -306,26 +313,42 @@ $postvars = array(
     'arg2' => $a->getPassword(),
     'arg3' => $client->getEmail(),
     'arg4' => $packname,
-    'arg5' => $firstname + '' + $lastname,
+    'arg5' => $fullname
    						
 
-);    
-// Make request and create user 
-$result = $this->_makeRequest($postvars);
-if($result == 0)   /// no errors   4 user is already taken
-{ 
-return true;
-}
-else if($result == 4) {
-throw new Server_Exception('Server Manager Vesta CP Error: User name exists on server, please choose another one '.$result);
-return false;
-}
+    );    
+        // Make request and create user 
+            $result = $this->_makeRequest($postvars);
+            if($result == 0)   /// no errors   4 user is already taken   3 package name does not exist 
+                    {
+ 
+                   // throw new Server_Exception('Server Manager Hestia CP : create result '.$result.$a->getUsername().' '.$a->getDomain() );
+
+            if (  $this->_createUserDomain($a->getUsername(), $a->getDomain() )  ) { 
+
+              //  throw new Server_Exception('Server Manager Hestia CP : create domain true with ');
+
+                                                }
+            else {
+                
+                throw new Server_Exception('Server Manager Hestia CP : create domain error with '.$a->getUsername().' '.$a->getDomain());
+            
+            }
+    
+
+            return true;
+            }
+
+            else if($result != 0) {
+                    throw new Server_Exception('Server Manager Hestia CP Error: User name exists on server, please choose another one '.$result.' '.$a->getUsername().' '.$a->getPassword().' '.$client->getEmail().' '.$packname.' '.$fullname);
+            return false;
+            }
         if($a->getReseller()) {
             $this->getLog()->info('Creating reseller hosting account');
         } else {
             $this->getLog()->info('Creating shared hosting account');
         }
-	}
+    }        
 
     /**
      * Suspend account on server
@@ -361,6 +384,44 @@ return false;
         
 
 	}
+
+
+/**
+     * Check if Package exists
+     * @param Server_Package $package
+     * @return bool
+     */
+    public function _createUserDomain($username, $domain) {
+        $this->getLog()->info('Creating user domain');
+             
+
+        // Server cli commands
+        $hst_command = 'v-add-domain';
+        $hst_returncode = 'yes';
+        $hst_format = 'json';
+        ///// create params
+        $postvars = array(
+            'returncode' => $hst_returncode,
+            'cmd' => $hst_command,
+            'user' => $this->_config['username'],
+            'password' => $this->_config['password'],
+            'arg1' => $username,
+            'arg2' => $domain
+        );
+
+        
+        $json = $this->_makerequest($postvars);
+        throw new Server_Exception('Server Manager Vesta CP Error: Create Domain result '.$json);
+        $data = json_decode($json, true);
+        //$packagekeys = array_keys($data);
+        if($json != '0'){
+            throw new Server_Exception('Server Manager Vesta CP Error: Create Domain failure '.$json);
+            }
+
+        return true;
+    }
+
+
 
     /**
      * Unsuspend account on server
