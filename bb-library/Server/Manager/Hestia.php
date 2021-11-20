@@ -324,7 +324,7 @@ if ($result == 0) {
  
                    // throw new Server_Exception('Server Manager Hestia CP : create result '.$result.$a->getUsername().' '.$a->getDomain() );
 
-            if (  $this->_createUserDomain($a->getUsername(), $a->getDomain() )  ) { 
+            if (  $this->_createUserDomain($a->getUsername(), $a->getDomain() , $a->getIP() )  ) { 
 
               //  throw new Server_Exception('Server Manager Hestia CP : create domain true with ');
 
@@ -391,7 +391,7 @@ if ($result == 0) {
      * @param Server_Package $package
      * @return bool
      */
-    public function _createUserDomain($username, $domain) {
+    public function _createUserDomain($username, $domain , $serverip) {
         $this->getLog()->info('Creating user domain');
              
 
@@ -406,13 +406,14 @@ if ($result == 0) {
             'user' => $this->_config['username'],
             'password' => $this->_config['password'],
             'arg1' => $username,
-            'arg2' => $domain
+            'arg2' => $domain,
+            'arg3' => $serverip
         );
 
         
         $json = $this->_makerequest($postvars);
-        throw new Server_Exception('Server Manager Vesta CP Error: Create Domain result '.$json);
-        $data = json_decode($json, true);
+        //throw new Server_Exception('Server Manager Vesta CP Error: Create Domain result '.$json);
+        //$data = json_decode($json, true);
         //$packagekeys = array_keys($data);
         if($json != '0'){
             throw new Server_Exception('Server Manager Vesta CP Error: Create Domain failure '.$json);
