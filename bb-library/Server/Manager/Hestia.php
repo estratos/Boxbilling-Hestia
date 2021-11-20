@@ -637,5 +637,30 @@ if ($result == 0) {
         } else {
             $this->getLog()->info('Changing shared hosting account ip');
         }
+        
+        $hst_command = 'v-change-web-domain-ip';
+        $hst_returncode = 'yes';
+        $hst_format = 'json';
+        ///// create params
+
+        $postvars = array(
+            'returncode' => $hst_returncode,
+            'cmd' => $hst_command,
+            'user' => $this->_config['username'],
+            'password' => $this->_config['password'],
+            'arg1' => $a->getUsername(),
+            'arg2' => $a->getDomain(),
+            'arg3' => $new,
+            'arg4' => 'yes'
+        );
+
+        $json = $this->_makerequest($postvars);
+
+        if($json != '0'){
+            throw new Server_Exception('Server Manager Hestia CP Error: change account ip failure '.$json);
+            return false;
+            }
+        return true;
+        
     }
 }
