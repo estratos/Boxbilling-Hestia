@@ -222,19 +222,19 @@ throw new Server_Exception('Connection to server failed  '.$result);
     
            
         // Server credentials
-$vst_command = 'v-check-user-password';
-$vst_returncode = 'yes';
+        $vst_command = 'v-check-user-password';
+        $vst_returncode = 'yes';
 
 
-// Prepare POST query
-$postvars = array(
+        // Prepare POST query
+        $postvars = array(
     
-    'returncode' => $vst_returncode,
-    'cmd' => $vst_command,
-    'arg1' => $this->_config['username'],
-    'arg2' => $this->_config['password'],
+        'returncode' => $vst_returncode,
+        'cmd' => $vst_command,
+        'arg1' => $this->_config['username'],
+        'arg2' => $this->_config['password'],
 
-);
+        );
 
     
 // Make request and check sys info
@@ -372,14 +372,15 @@ if ($result == 0) {
           'cmd' => $hst_command,
           'user' => $this->_config['username'],
           'password' => $this->_config['password'],
-          'arg1' => 'yes'
+          'arg1' => $a->getUsername(),
+          'arg2' => 'yes'
                                   
       
       ); 
 
       $json = $this->_makerequest($postvars);
       
-      $data = json_decode($json, true);
+      //$data = json_decode($json, true);
       //$packagekeys = array_keys($data);
         
 
@@ -416,7 +417,8 @@ if ($result == 0) {
         //$data = json_decode($json, true);
         //$packagekeys = array_keys($data);
         if($json != '0'){
-            throw new Server_Exception('Server Manager Vesta CP Error: Create Domain failure '.$json);
+            throw new Server_Exception('Server Manager Hestia CP Error: Create Domain failure '.$json);
+            return false;
             }
 
         return true;
