@@ -527,6 +527,8 @@ if ($result == 0) {
         $p->getMaxPop();
         
         $p->getCustomValue('param_name');
+
+
 	}
 
     /**
@@ -555,6 +557,33 @@ if ($result == 0) {
         } else {
             $this->getLog()->info('Changing shared hosting account domain');
         }
+       //// changes account domain name safely no files are lossed
+       
+       
+       /// change domian name v-change-web-domain-name  USER DOMAIN NEW_DOMAIN [RESTART]
+
+         $hst_command = 'v-change-web-domain-name';
+            $hst_returncode = 'yes';
+            $hst_format = 'json';
+            ///// create params
+            $postvars = array(
+                'returncode' => $hst_returncode,
+                'cmd' => $hst_command,
+                'user' => $this->_config['username'],
+                'password' => $this->_config['password'],
+                'arg1' => $a->getUsername(),
+                'arg2' => $a->getDomain(),
+                'arg3' => $new,
+                'arg4' => 'yes'
+            );
+            
+            $json = $this->_makerequest($postvars);
+            if($json != '0'){
+                throw new Server_Exception('Server Manager Hestia CP Error: change account domain failure '.$json);
+                return false;
+                }
+            return true;
+            
     }
 
     /**
